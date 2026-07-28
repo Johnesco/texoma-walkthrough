@@ -1,0 +1,120 @@
+/* Texoma walkthrough — chrome around the canvas */
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0; height: 100%; overflow: hidden;
+  background: #0f1115; color: #f2efe9;
+  font: 14px/1.45 "Inter", "Segoe UI", system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+#view { position: fixed; inset: 0; width: 100%; height: 100%; display: block; }
+
+/* ---------- top bar ---------- */
+/* The panels sit above the click-to-start overlay so the mode
+   buttons and room list stay usable before you lock the pointer. */
+#topbar {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 30;
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 16px; padding: 14px 18px; pointer-events: none;
+  background: linear-gradient(to bottom, rgba(12,14,18,.55), transparent);
+}
+
+#roomLabel {
+  font-size: 19px; font-weight: 600; letter-spacing: .015em;
+  text-shadow: 0 1px 10px rgba(0,0,0,.65);
+}
+
+#modes { display: flex; gap: 6px; pointer-events: auto; }
+
+button {
+  font: inherit; font-size: 12.5px; font-weight: 500;
+  color: #e8e4dc; background: rgba(22,25,31,.72);
+  border: 1px solid rgba(255,255,255,.14); border-radius: 7px;
+  padding: 7px 13px; cursor: pointer;
+  backdrop-filter: blur(8px);
+  transition: background .14s, border-color .14s, color .14s;
+}
+button:hover { background: rgba(38,43,52,.9); border-color: rgba(255,255,255,.3); }
+button.on { background: #e8e4dc; border-color: #e8e4dc; color: #16181d; }
+
+/* ---------- minimap ---------- */
+#mapWrap {
+  position: fixed; left: 18px; bottom: 18px; z-index: 30;
+  padding: 10px 10px 6px; border-radius: 10px;
+  background: rgba(16,18,23,.7); border: 1px solid rgba(255,255,255,.12);
+  backdrop-filter: blur(10px);
+}
+#mapWrap.hidden { display: none; }
+#map { display: block; }
+.maplabel {
+  margin-top: 5px; font-size: 10.5px; letter-spacing: .06em;
+  text-transform: uppercase; color: rgba(242,239,233,.5); text-align: center;
+}
+
+/* ---------- room jump list ---------- */
+#jumpWrap {
+  position: fixed; right: 18px; top: 62px; z-index: 30;
+  width: 168px; max-height: calc(100vh - 96px); overflow-y: auto;
+  padding: 12px; border-radius: 10px;
+  background: rgba(16,18,23,.7); border: 1px solid rgba(255,255,255,.12);
+  backdrop-filter: blur(10px);
+}
+#jumpWrap h2 {
+  margin: 0 0 9px; font-size: 10.5px; font-weight: 600;
+  letter-spacing: .09em; text-transform: uppercase;
+  color: rgba(242,239,233,.5);
+}
+#jumps { display: flex; flex-direction: column; gap: 4px; }
+#jumps button { text-align: left; padding: 6px 10px; background: rgba(255,255,255,.05); }
+#jumps button:hover { background: rgba(255,255,255,.16); }
+
+/* ---------- crosshair + hint ---------- */
+#crosshair {
+  position: fixed; left: 50%; top: 50%; z-index: 5; display: none;
+  width: 5px; height: 5px; margin: -2.5px 0 0 -2.5px;
+  border-radius: 50%; background: rgba(255,255,255,.82);
+  box-shadow: 0 0 0 1.5px rgba(0,0,0,.35);
+  pointer-events: none;
+}
+
+#hint {
+  position: fixed; right: 18px; bottom: 18px; z-index: 10;
+  font-size: 11.5px; color: rgba(242,239,233,.55);
+  text-shadow: 0 1px 6px rgba(0,0,0,.6);
+}
+
+/* ---------- click-to-start ---------- */
+#overlay {
+  position: fixed; inset: 0; z-index: 15;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(10,12,16,.62); backdrop-filter: blur(3px);
+  cursor: pointer;
+}
+.card {
+  text-align: center; padding: 34px 46px; border-radius: 14px;
+  background: rgba(18,21,26,.86); border: 1px solid rgba(255,255,255,.14);
+  box-shadow: 0 20px 60px rgba(0,0,0,.5);
+}
+.card h1 { margin: 0; font-size: 27px; font-weight: 600; letter-spacing: -.01em; }
+.card .sub {
+  margin: 7px 0 22px; font-size: 12.5px; letter-spacing: .04em;
+  color: rgba(242,239,233,.55);
+}
+.card .go {
+  margin: 0 0 20px; font-size: 15px; font-weight: 500;
+  padding: 11px 0; border-top: 1px solid rgba(255,255,255,.12);
+  border-bottom: 1px solid rgba(255,255,255,.12);
+}
+.keys {
+  margin: 0; padding: 0; list-style: none;
+  display: grid; grid-template-columns: 1fr 1fr; gap: 5px 22px;
+  font-size: 12px; color: rgba(242,239,233,.62);
+}
+.keys b { color: #f2efe9; font-weight: 600; }
+
+@media (max-width: 720px) {
+  #jumpWrap { display: none; }
+  #mapWrap { transform: scale(.8); transform-origin: bottom left; }
+}

@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Texoma — 3D Walkthrough</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<canvas id="view"></canvas>
+
+<div id="crosshair"></div>
+
+<div id="overlay">
+  <div class="card">
+    <h1>Texoma Plan</h1>
+    <p class="sub">4 bed &middot; 3 bath &middot; 2-car garage &middot; 40&prime; &times; 70&prime;</p>
+    <p class="go">Click to walk through</p>
+    <ul class="keys">
+      <li><b>W A S D</b> move</li>
+      <li><b>Mouse</b> look</li>
+      <li><b>Shift</b> run</li>
+      <li><b>Esc</b> release cursor</li>
+    </ul>
+  </div>
+</div>
+
+<header id="topbar">
+  <div id="roomLabel">Front Walk</div>
+  <nav id="modes">
+    <button data-mode="walk" class="on">Walk</button>
+    <button data-mode="dollhouse">Dollhouse</button>
+    <button data-mode="exterior">Exterior</button>
+    <button id="toggleFurniture" class="on">Furniture</button>
+  </nav>
+</header>
+
+<aside id="mapWrap">
+  <canvas id="map" width="210" height="360"></canvas>
+  <div class="maplabel">N &uarr;&nbsp;&nbsp;&middot;&nbsp;&nbsp;M to hide</div>
+</aside>
+
+<aside id="jumpWrap">
+  <h2>Jump to</h2>
+  <div id="jumps"></div>
+</aside>
+
+<div id="hint">Drag to look &middot; 1 walk &middot; 2 dollhouse &middot; 3 exterior</div>
+
+<script src="vendor/three.min.js"></script>
+<script src="js/plan.js"></script>
+<script src="js/build.js"></script>
+<script src="js/controls.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>
