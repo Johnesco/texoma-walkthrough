@@ -62,6 +62,13 @@ or a door moves it everywhere at once.
 `window.TEXOMA` exposes the scene, camera, walker and plan for poking at
 things from the console.
 
+three.js is pinned to **r156** on purpose. It is the last release with a
+UMD build, and a UMD build loaded by a plain `<script>` tag is what lets
+`index.html` work when opened directly off disk — ES modules are blocked
+by CORS on `file://` origins. r156 logs a deprecation warning about
+this; that warning is expected. Moving to a modern three.js means moving
+to modules, which means the page would only run from a web server.
+
 ## Deliberate simplifications
 
 - **The great room is a raised flat ceiling (10'-3"), not a vault.** The
