@@ -41,6 +41,18 @@ positions are measured, not estimated.
 drawing — red for wall, colour-coded for each type of opening. That is
 the check that the 3D matches the plan.
 
+Two more checks are worth re-running after any change to `js/plan.js`,
+both from the browser console via `window.TEXOMA`:
+
+- **Reachability.** Flood-fill the floor on a 0.25 ft grid using
+  `TEXOMA.walker.blocked()`, starting at the front walk, and confirm
+  every room can be reached. This is what caught a vanity, a bed and a
+  run of closet shelving sitting across doorways.
+- **Leaks.** From eye height all over the great room, cast rays in
+  every direction and check that none escapes to open sky or lands on
+  the roof. This is what caught the ceiling breaking through the roof,
+  and later a missing soffit where the kitchen opens onto the hall.
+
 ## Files
 
 ```
@@ -69,17 +81,43 @@ by CORS on `file://` origins. r156 logs a deprecation warning about
 this; that warning is expected. Moving to a modern three.js means moving
 to modules, which means the page would only run from a web server.
 
+## The roof and the vault
+
+These two are one problem, so they are worth reading together.
+
+The listing photos show a vaulted great room. The first attempt at it
+did not work: with a hip roof on this footprint the north end slopes
+down to meet the eave, and the roof plane over the rear wall sits at
+about **11'-3"** — below where a vaulted ceiling needs to be. The
+ceiling came out through the roof, which is not a bug in the geometry so
+much as an honest structural conflict.
+
+The fix is the one the real house almost certainly uses: **gable the
+rear instead of hipping it**. With a gable, the ridge runs all the way
+out to the rear wall and the roof cross-section is constant along the
+whole depth of the great room, so there is headroom to vault into.
+
+So the roof is now **hipped at the front, gabled at the rear**:
+
+- ridge at x = 20, 4:12 pitch, eave at 10'-9", ridge underside 17'-11"
+- the rear gable closes the triangle between the eave and the ridge;
+  from inside the great room you see its lower few feet above the
+  windows, painted the same as the walls
+- the great room ceiling climbs at 3:12 off the 9' plate and flattens
+  at **12'-6"**, leaving 2'-3" of clearance under the roof at the
+  tightest point
+
+Where the vault meets a flat 9' space — the hall, the primary entry —
+a soffit drops down to close the step. Miss one and you get a hole
+straight into the attic; the ray-casting check below is what catches
+them.
+
 ## Deliberate simplifications
 
-- **The great room is a raised flat ceiling (10'-3"), not a vault.** The
-  listing photos clearly show a vault, but a true vault will not fit
-  under a hip roof on this footprint — the ridge sits 21' in from the
-  eave, so the ceiling plane breaks through the roof near the rear wall.
-  A gable over the great room would be needed to do it properly.
 - **Small closets are not framed out.** The linen and coat closets off
   the mud hall, and the reach-ins, are drawn as open floor area.
-- **The roof is a plain 4:12 hip.** The real elevation has a gabled
-  board-and-batten entry feature and a lower roof over the garage.
+- **The front elevation is plainer than the real one.** No gabled
+  board-and-batten entry feature, and no lower roof over the garage.
 - **Fixtures are boxes.** The island, counters, vanities, tubs, washer
   and dryer are placed where the plan shows them, but they are blocks,
   not modelled casework. Three of them (bath 2 vanity, bedroom 4 bed,

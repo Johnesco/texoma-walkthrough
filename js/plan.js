@@ -17,14 +17,41 @@ const PLAN = (function () {
   const T_INT = 0.42;  // interior wall thickness
   const H_STD = 9.0;   // standard ceiling
 
-  /* The listing photos show a vaulted great room. A true vault will
-     not fit under a hip roof of this footprint — the ridge sits 21'
-     in from the eave, so the ceiling would break through the roof
-     plane near the rear wall. It is modelled instead as a raised
-     flat ceiling, which reads the same from inside and stays solid.
-     EXT_TOP is the eave line: exterior walls run up to meet it. */
-  const H_GREAT = 10.25;
+  /* EXT_TOP is the eave line: exterior walls run up to meet it. */
   const EXT_TOP = 10.75;
+
+  /* ---- Roof ------------------------------------------------------
+     Hipped at the front, gabled at the rear. The rear gable is what
+     makes the vaulted great room possible: hip the north end instead
+     and the roof plane drops to 11'3" over the rear wall, which is
+     below where the ceiling needs to be.
+
+     With the gable, the roof cross-section is constant from the rear
+     wall back to z=50, so the ceiling can climb toward the ridge. */
+  const ROOF = { eave: EXT_TOP, over: 1.5, pitch: 4 / 12, ridgeX: 20 };
+
+  // underside of the roof at a given x (constant in z over the gable)
+  function roofH(x) {
+    const fromEave = Math.min(x + ROOF.over, 40 + ROOF.over - x);
+    return ROOF.eave + ROOF.pitch * fromEave;
+  }
+  const RIDGE_Y = roofH(ROOF.ridgeX);            // 17'-11"
+
+  /* ---- The vault -------------------------------------------------
+     Great room ceiling: climbs at 3:12 from the 9' plate toward the
+     ridge and flattens at 12'-6". Kinks at x=14 and x=26, where it
+     meets the cap — ceiling panels are split there. */
+  const VAULT = { slope: 0.25, cap: 12.5, ridgeX: ROOF.ridgeX };
+  function vaultH(x) {
+    const rise = VAULT.slope * (VAULT.ridgeX - Math.abs(x - VAULT.ridgeX));
+    return Math.min(VAULT.cap, H_STD + Math.max(0, rise));
+  }
+  const VAULT_KINKS = [14, 26];
+
+  /* Walls around the great room run to this — comfortably above the
+     vault, with the ceiling hiding whatever sticks up past it. Too
+     tall is invisible; too short leaves a gap. */
+  const H_VAULT_TOP = 12.6;
 
   /* Opening profiles: sill height -> head height */
   const HOLE = {
@@ -62,9 +89,17 @@ const PLAN = (function () {
       holes:[[3.7,6.4,'win'],[7.3,10.0,'win'],
              [13.7,18.98,'arch'],[21.2,37.7,'gdoor']] },
 
+    // Rear gable: sits on the rear wall and closes the triangle up to
+    // the ridge. Split at the ridge so each half is a flat plane.
+    // Inside it is painted wall — you see it above the great room.
+    { axis:'z', at:0, a:0, b:20, t:T_EXT, ext:true, out:-1, gable:true,
+      outMat:'gable', y0:EXT_TOP, top:roofH(0), topB:RIDGE_Y },
+    { axis:'z', at:0, a:20, b:40, t:T_EXT, ext:true, out:-1, gable:true,
+      outMat:'gable', y0:EXT_TOP, top:RIDGE_Y, topB:roofH(40) },
+
     /* ---------- INTERIOR ---------- */
     // Family / primary suite divider (carries the raised ceiling)
-    { axis:'x', at:25.2, a:0, b:16.1, t:T_INT, top:H_GREAT },
+    { axis:'x', at:25.2, a:0, b:16.1, t:T_INT, top:H_VAULT_TOP },
     // Primary bath vanity wall
     { axis:'x', at:28.95, a:15.8, b:22.9, t:T_INT, top:H_STD },
     // Bedroom 4 west wall + its door off the hall
@@ -82,7 +117,7 @@ const PLAN = (function () {
     { axis:'x', at:18.98, a:41.1, b:43.4, t:T_INT, top:H_STD },
     { axis:'x', at:18.98, a:47.6, b:70,   t:T_INT, top:H_STD },
     // Kitchen return + hall west wall (door to the bath-2 vestibule)
-    { axis:'x', at:13.45, a:22.7, b:25.07, t:T_INT, top:H_GREAT },
+    { axis:'x', at:13.45, a:22.7, b:25.07, t:T_INT, top:H_VAULT_TOP },
     { axis:'x', at:13.45, a:36.7, b:70, t:T_INT, top:H_STD,
       holes:[[51.6,54.6,'door']] },
     // Bath 2 east wall + its door
@@ -94,14 +129,16 @@ const PLAN = (function () {
     { axis:'z', at:15.93, a:25.2, b:40, t:T_INT, top:H_STD,
       holes:[[25.45,28.45,'door'],[31.9,34.4,'arch']] },
     // Family / walk-in closet divider
-    { axis:'z', at:20.78, a:18.8, b:25.2, t:T_INT, top:H_GREAT },
+    { axis:'z', at:20.78, a:18.8, b:25.2, t:T_INT, top:H_VAULT_TOP },
     { axis:'z', at:20.78, a:25.2, b:29.2, t:T_INT, top:H_STD },
     // Soffits: where the raised great-room ceiling opens into a 9'
     // space the ceiling steps down, so a short drop closes the gap.
-    { axis:'z', at:20.78, a:13.45, b:18.8, t:T_INT, y0:H_STD, top:H_GREAT },
-    { axis:'x', at:25.2, a:16.1, b:20.78, t:T_INT, y0:H_STD, top:H_GREAT },
+    { axis:'z', at:20.78, a:13.45, b:18.8, t:T_INT, y0:H_STD, top:H_VAULT_TOP },
+    { axis:'x', at:25.2, a:16.1, b:20.78, t:T_INT, y0:H_STD, top:H_VAULT_TOP },
+    // ...and the same again where the kitchen opens onto the hall
+    { axis:'x', at:13.45, a:20.78, b:22.7, t:T_INT, y0:H_STD, top:H_VAULT_TOP },
     // Kitchen / flex divider
-    { axis:'z', at:25.07, a:0, b:13.7, t:T_INT, top:H_GREAT },
+    { axis:'z', at:25.07, a:0, b:13.7, t:T_INT, top:H_VAULT_TOP },
     // Closet / laundry+bath 3 divider
     { axis:'z', at:29.64, a:18.8, b:40, t:T_INT, top:H_STD },
     // Bath 3 south wall + door into bedroom 4
@@ -136,9 +173,9 @@ const PLAN = (function () {
   /* ---- Rooms: floors, ceilings and the label you see while walking
      Listed front-to-back priority; first match wins for labelling. --- */
   const rooms = [
-    { id:'dining',  name:'Dining',       x0:0,     x1:13.45, z0:0,     z1:15.9,  floor:'wood',     ceil:H_GREAT },
-    { id:'kitchen', name:'Kitchen',      x0:0,     x1:13.45, z0:15.9,  z1:25.07, floor:'wood',     ceil:H_GREAT },
-    { id:'family',  name:'Family Room',  x0:13.45, x1:25.2,  z0:0,     z1:20.78, floor:'wood',     ceil:H_GREAT },
+    { id:'dining',  name:'Dining',       x0:0,     x1:13.45, z0:0,     z1:15.9,  floor:'wood',     ceil:'vault' },
+    { id:'kitchen', name:'Kitchen',      x0:0,     x1:13.45, z0:15.9,  z1:25.07, floor:'wood',     ceil:'vault' },
+    { id:'family',  name:'Family Room',  x0:13.45, x1:25.2,  z0:0,     z1:20.78, floor:'wood',     ceil:'vault' },
     { id:'pentry',  name:'Primary Entry',x0:25.2,  x1:28.95, z0:16.1,  z1:20.78, floor:'wood',     ceil:H_STD },
     { id:'primary', name:'Primary Suite',x0:25.2,  x1:40,    z0:0,     z1:15.93, floor:'wood',     ceil:H_STD },
     { id:'pbath',   name:'Primary Bath', x0:28.95, x1:40,    z0:15.93, z1:29.64, floor:'tile',     ceil:H_STD },
@@ -251,9 +288,16 @@ const PLAN = (function () {
   ];
 
   return {
-    T_EXT, T_INT, H_STD, H_GREAT, EXT_TOP, HOLE,
+    T_EXT, T_INT, H_STD, EXT_TOP, HOLE,
+    ROOF, RIDGE_Y, roofH, vaultH, VAULT_KINKS,
     walls, rooms, fixtures, accents, spawns,
     bounds: { x0: 0, x1: 40, z0: 0, z1: 70 },
-    topOf(w) { return w.top; },
+    // Walls are flat-topped unless topB is given, in which case the
+    // top ramps from `top` at a to `topB` at b — that is the gable.
+    topOf(w, u) {
+      if (w.topB === undefined) return w.top;
+      const t = (u - w.a) / (w.b - w.a);
+      return w.top + (w.topB - w.top) * t;
+    },
   };
 })();

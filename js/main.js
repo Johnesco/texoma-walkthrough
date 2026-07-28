@@ -33,8 +33,8 @@
   /* --- the house ------------------------------------------------- */
   const house = BUILD.buildHouse();
   const root = new THREE.Group();
-  root.add(house.groups.shell, house.groups.ceiling,
-           house.groups.roof, house.groups.furniture);
+  root.add(house.groups.shell, house.groups.ceiling, house.groups.roof,
+           house.groups.gable, house.groups.furniture);
   scene.add(root);
 
   /* --- controls -------------------------------------------------- */
@@ -56,6 +56,7 @@
     orbit.enabled = !walk;
     house.groups.ceiling.visible = next !== 'dollhouse';
     house.groups.roof.visible = next !== 'dollhouse';
+    house.groups.gable.visible = next !== 'dollhouse';
     crosshair.style.display = walk && walker.locked ? 'block' : 'none';
     overlay.style.display = walk && !walker.locked ? 'flex' : 'none';
     hint.style.display = walk ? 'block' : 'none';

@@ -16,6 +16,7 @@ const BUILD = (function () {
     wood2:   0x6e5847, sofa:    0xe4ded2, bed:     0xdedad0,
     tv:      0x1e2124, tile2:   0xe4e1da, glass:   0xbbd3e0,
     siding:  0xa8ada2, trim:    0xfbfaf7, roof:    0x6b6259,
+    gable:   0x8f9a8c,
     gdoor:   0x8d8579, fdoor:   0x39352f, grass:   0x7e9c5f,
     drive:   0xbdbab4, street:  0x55555a, stone:   0xd8d5cb,
   };
@@ -29,6 +30,7 @@ const BUILD = (function () {
       const a = this._get(m);
       a.push(...p0, ...p1, ...p2, ...p0, ...p2, ...p3);
     }
+    tri(m, p0, p1, p2) { this._get(m).push(...p0, ...p1, ...p2); }
     box(m, x0, x1, y0, y1, z0, z1) {
       const V = (x, y, z) => [x, y, z];
       this.quad(m, V(x0,y0,z1), V(x1,y0,z1), V(x1,y1,z1), V(x0,y1,z1)); // +z
@@ -99,7 +101,7 @@ const BUILD = (function () {
     const top = (u) => PLAN.topOf(w, u);
     const holes = (w.holes || []).slice().sort((a, b) => a[0] - b[0]);
     const matIn = w.accent ? 'accent' : 'wall';
-    const matOut = 'siding';
+    const matOut = w.outMat || 'siding';
 
     let cursor = w.a;
     for (const [h0, h1, kind] of holes) {
@@ -156,23 +158,51 @@ const BUILD = (function () {
     }
   }
 
-  /* --- roof: a simple 4:12 hip over the whole footprint ---------- */
+  /* --- ceilings --------------------------------------------------
+     Flat rooms are one quad. A vaulted room follows the slope in x,
+     so it is split at every kink in the vault profile that falls
+     inside the room — otherwise the panel would cut the corner. */
+  function ceilingPanels(bag, r) {
+    if (r.ceil !== 'vault') {
+      const h = r.ceil;
+      bag.quad('ceil', [r.x0, h, r.z0], [r.x1, h, r.z0],
+                       [r.x1, h, r.z1], [r.x0, h, r.z1]);
+      return;
+    }
+    const cuts = [r.x0, ...PLAN.VAULT_KINKS.filter(k => k > r.x0 && k < r.x1), r.x1];
+    for (let i = 0; i < cuts.length - 1; i++) {
+      const a = cuts[i], b = cuts[i + 1];
+      const ha = PLAN.vaultH(a), hb = PLAN.vaultH(b);
+      bag.quad('ceil', [a, ha, r.z0], [b, hb, r.z0],
+                       [b, hb, r.z1], [a, ha, r.z1]);
+    }
+  }
+
+  /* --- roof: 4:12, gabled at the rear and hipped at the front ----
+     The two long slopes run the length of the house and meet at the
+     ridge. The front end hips in to a point; the rear end runs
+     straight out to the gable, which is what gives the great room
+     the headroom to vault. */
   function buildRoof(bag) {
-    const o = 1.5, ex = PLAN.EXT_TOP, pitch = 4 / 12;
+    const o = PLAN.ROOF.over, ex = PLAN.ROOF.eave, pitch = PLAN.ROOF.pitch;
     const x0 = -o, x1 = 40 + o, z0 = -o, z1 = 70 + o;
-    const half = (x1 - x0) / 2, rx = x0 + half;
-    const rz0 = z0 + half, rz1 = z1 - half;
-    const ry = ex + half * pitch;
+    const half = (x1 - x0) / 2;
+    const rx = x0 + half;          // ridge, x = 20
+    const rzS = z1 - half;         // where the front hip starts
+    const ry = ex + half * pitch;  // ridge height
     const V = (x, y, z) => [x, y, z];
-    bag.quad('roof', V(x0,ex,z0), V(x1,ex,z0), V(rx,ry,rz0), V(rx,ry,rz0));
-    bag.quad('roof', V(x1,ex,z1), V(x0,ex,z1), V(rx,ry,rz1), V(rx,ry,rz1));
-    bag.quad('roof', V(x0,ex,z1), V(x0,ex,z0), V(rx,ry,rz0), V(rx,ry,rz1));
-    bag.quad('roof', V(x1,ex,z0), V(x1,ex,z1), V(rx,ry,rz1), V(rx,ry,rz0));
-    // fascia band so the eave has some thickness from below
-    bag.box('trim', x0, x1, ex - 0.55, ex, z0, z0 + 0.12);
+
+    bag.quad('roof', V(x0,ex,z0), V(x0,ex,z1), V(rx,ry,rzS), V(rx,ry,z0)); // west
+    bag.quad('roof', V(x1,ex,z1), V(x1,ex,z0), V(rx,ry,z0), V(rx,ry,rzS)); // east
+    bag.tri('roof',  V(x0,ex,z1), V(x1,ex,z1), V(rx,ry,rzS));              // front hip
+
+    // fascia along the eaves and the front, then rake boards up the gable
     bag.box('trim', x0, x1, ex - 0.55, ex, z1 - 0.12, z1);
     bag.box('trim', x0, x0 + 0.12, ex - 0.55, ex, z0, z1);
     bag.box('trim', x1 - 0.12, x1, ex - 0.55, ex, z0, z1);
+    const d = 0.55;
+    bag.quad('trim', V(x0,ex,z0), V(rx,ry,z0), V(rx,ry-d,z0), V(x0,ex-d,z0));
+    bag.quad('trim', V(rx,ry,z0), V(x1,ex,z0), V(x1,ex-d,z0), V(rx,ry-d,z0));
   }
 
   /* --- site: lawn, drive, walk, street, covered patio ------------ */
@@ -233,7 +263,8 @@ const BUILD = (function () {
   /* --- assemble --------------------------------------------------- */
   function buildHouse() {
     const materials = makeMaterials();
-    const shell = new Bag(), roofBag = new Bag(), ceilBag = new Bag(), furnBag = new Bag();
+    const shell = new Bag(), roofBag = new Bag(), ceilBag = new Bag(),
+          furnBag = new Bag(), gableBag = new Bag();
 
     // mark the accent wall
     for (const a of PLAN.accents) {
@@ -243,13 +274,13 @@ const BUILD = (function () {
       }
     }
 
-    for (const w of PLAN.walls) buildWall(shell, w);
+    // the gable rides with the roof so the dollhouse view can drop it
+    for (const w of PLAN.walls) buildWall(w.gable ? gableBag : shell, w);
     for (const r of PLAN.rooms) {
       const fm = r.floor === 'wood' ? 'wood' : r.floor === 'tile' ? 'tile' : 'concrete';
       shell.quad(fm, [r.x0, 0.02, r.z1], [r.x1, 0.02, r.z1], [r.x1, 0.02, r.z0], [r.x0, 0.02, r.z0]);
       if (r.outdoor) continue;
-      const h = r.ceil;
-      ceilBag.quad('ceil', [r.x0, h, r.z0], [r.x1, h, r.z0], [r.x1, h, r.z1], [r.x0, h, r.z1]);
+      ceilingPanels(ceilBag, r);
     }
     for (const f of PLAN.fixtures) furnBag.box(f.mat, f.x0, f.x1, f.y0, f.y1, f.z0, f.z1);
     buildRoof(roofBag);
@@ -259,11 +290,13 @@ const BUILD = (function () {
       shell:   new THREE.Group(),
       ceiling: new THREE.Group(),
       roof:    new THREE.Group(),
+      gable:   new THREE.Group(),
       furniture: new THREE.Group(),
     };
     shell.meshes(materials).forEach(m => groups.shell.add(m));
     ceilBag.meshes(materials).forEach(m => groups.ceiling.add(m));
     roofBag.meshes(materials).forEach(m => groups.roof.add(m));
+    gableBag.meshes(materials).forEach(m => groups.gable.add(m));
     furnBag.meshes(materials).forEach(m => groups.furniture.add(m));
 
     return { groups, materials, colliders: collisionRects() };
