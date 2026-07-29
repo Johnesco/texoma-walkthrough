@@ -103,9 +103,9 @@ const PLAN = (function () {
     // Primary bath vanity wall
     { axis:'x', at:28.95, a:15.8, b:22.9, t:T_INT, top:H_STD },
     // Bedroom 4 west wall + its door off the hall
-    { axis:'x', at:28.95, a:34.9, b:45.0, t:T_INT, top:H_STD,
-      holes:[[37.8,40.4,'door']] },
-    { axis:'x', at:28.95, a:47.4, b:49.0, t:T_INT, top:H_STD },
+    // ...and further along, the door to bedroom 4's own reach-in
+    { axis:'x', at:28.95, a:34.9, b:49.0, t:T_INT, top:H_STD,
+      holes:[[37.8,40.4,'door'],[45.0,47.5,'door']] },
     // Laundry / bath 3 divider
     { axis:'x', at:31.16, a:25.6, b:35.3, t:T_INT, top:H_STD },
     // Primary shower wall, toilet nib, garage water-heater alcove
@@ -139,6 +139,12 @@ const PLAN = (function () {
     { axis:'x', at:13.45, a:20.78, b:22.7, t:T_INT, y0:H_STD, top:H_VAULT_TOP },
     // Kitchen / flex divider
     { axis:'z', at:25.07, a:0, b:13.7, t:T_INT, top:H_VAULT_TOP },
+    // Pantry: a small walk-in off the kitchen, entered at its north-east
+    // corner — not the run of cabinets it was first modelled as.
+    { axis:'z', at:20.3, a:0, b:4.85, t:T_INT, top:H_VAULT_TOP,
+      holes:[[2.8,4.85,'door']] },
+    { axis:'x', at:4.85, a:20.3, b:25.07, t:T_INT, top:H_VAULT_TOP,
+      holes:[[20.3,22.1,'door']] },
     // Closet / laundry+bath 3 divider
     { axis:'z', at:29.64, a:18.8, b:40, t:T_INT, top:H_STD },
     // Bath 3 south wall + door into bedroom 4
@@ -149,9 +155,17 @@ const PLAN = (function () {
     // Laundry south wall + laundry door
     { axis:'z', at:36.84, a:18.8, b:29.1, t:T_INT, top:H_STD,
       holes:[[24.9,27.6,'door']] },
-    // Hall / mud-hall divider
+    /* The block between the hall and the garage is not one space: it
+       is three closets around a solid core, each opening a different
+       way. Linen faces north into the hall, coats faces west into the
+       mud hall, and bedroom 4's reach-in faces east into the bedroom.
+       The mud hall is only the strip west of them. */
     { axis:'z', at:41.27, a:18.8, b:29.1, t:T_INT, top:H_STD,
-      holes:[[25.2,27.6,'arch']] },
+      holes:[[25.2,27.7,'door']] },              // linen closet door
+    { axis:'x', at:24.0, a:41.27, b:48.89, t:T_INT, top:H_STD,
+      holes:[[45.0,47.5,'door']] },              // coat closet door
+    { axis:'z', at:43.63, a:23.96, b:29.1, t:T_INT, top:H_STD },
+    { axis:'x', at:26.45, a:43.63, b:48.89, t:T_INT, top:H_STD },
     // Bedroom 2 south wall + closet door
     { axis:'z', at:48.06, a:0, b:10.0, t:T_INT, top:H_STD,
       holes:[[1.9,4.4,'door']] },
@@ -174,6 +188,8 @@ const PLAN = (function () {
      Listed front-to-back priority; first match wins for labelling. --- */
   const rooms = [
     { id:'dining',  name:'Dining',       x0:0,     x1:13.45, z0:0,     z1:15.9,  floor:'wood',     ceil:'vault' },
+    // pantry before kitchen: they overlap, and first match wins
+    { id:'pantry',  name:'Pantry',       x0:0,     x1:4.85,  z0:20.3,  z1:25.07, floor:'wood',     ceil:H_STD },
     { id:'kitchen', name:'Kitchen',      x0:0,     x1:13.45, z0:15.9,  z1:25.07, floor:'wood',     ceil:'vault' },
     { id:'family',  name:'Family Room',  x0:13.45, x1:25.2,  z0:0,     z1:20.78, floor:'wood',     ceil:'vault' },
     { id:'pentry',  name:'Primary Entry',x0:25.2,  x1:28.95, z0:16.1,  z1:20.78, floor:'wood',     ceil:H_STD },
@@ -184,7 +200,10 @@ const PLAN = (function () {
     { id:'hall',    name:'Hall',         x0:13.45, x1:18.98, z0:20.78, z1:48.06, floor:'wood',     ceil:H_STD },
     { id:'foyer',   name:'Foyer',        x0:13.45, x1:18.98, z0:48.06, z1:58.59, floor:'wood',     ceil:H_STD },
     { id:'ehall',   name:'Hall',         x0:18.98, x1:29.0,  z0:36.84, z1:41.27, floor:'wood',     ceil:H_STD },
-    { id:'coats',   name:'Mud Hall',     x0:18.98, x1:29.0,  z0:41.27, z1:48.89, floor:'wood',     ceil:H_STD },
+    { id:'coats',   name:'Mud Hall',     x0:18.98, x1:24.0,  z0:41.27, z1:48.89, floor:'wood',     ceil:H_STD },
+    { id:'linen',   name:'Linen Closet', x0:24.0,  x1:28.95, z0:41.27, z1:43.63, floor:'wood',     ceil:H_STD },
+    { id:'coatcl',  name:'Coat Closet',  x0:24.0,  x1:26.45, z0:43.63, z1:48.89, floor:'wood',     ceil:H_STD },
+    { id:'bed4cl',  name:"Bedroom 4 Closet", x0:26.45, x1:28.95, z0:43.63, z1:48.89, floor:'wood', ceil:H_STD },
     { id:'laundry', name:'Laundry',      x0:18.98, x1:31.16, z0:29.64, z1:36.84, floor:'tile',     ceil:H_STD },
     { id:'bath3',   name:'Bath 3',       x0:31.16, x1:40,    z0:29.64, z1:35.18, floor:'tile',     ceil:H_STD },
     { id:'bed4',    name:'Bedroom 4',    x0:28.95, x1:40,    z0:35.18, z1:48.89, floor:'wood',     ceil:H_STD },
@@ -205,12 +224,14 @@ const PLAN = (function () {
     // Kitchen — island with sink, perimeter run, uppers, fridge, pantry
     B(6.05, 9.74, 10.9, 18.5,  0,   3.0,  'cab'),
     B(5.75, 10.04, 10.6, 18.8, 3.0, 3.18, 'counter'),
-    B(0.0,  2.1,  10.5, 25.07, 0,   3.0,  'cab'),
-    B(0.0,  2.3,  10.5, 25.07, 3.0, 3.18, 'counter'),
-    B(0.0,  1.15, 10.5, 21.6,  4.6, 7.0,  'cab'),
+    B(0.0,  2.1,  10.5, 20.3,  0,   3.0,  'cab'),
+    B(0.0,  2.3,  10.5, 20.3,  3.0, 3.18, 'counter'),
+    B(0.0,  1.15, 10.5, 20.3,  4.6, 7.0,  'cab'),
     B(0.0,  2.1,  13.6, 16.5,  0,   3.1,  'steel'),   // range
     B(9.97, 12.5, 21.9, 24.6,  0,   6.0,  'steel'),   // refrigerator
-    B(2.1,  6.4,  22.4, 25.07, 0,   7.0,  'cab'),     // pantry
+    // pantry shelving, along the back and side so you can still step in
+    B(0.0,  1.2,  20.4, 25.07, 0,   6.6,  'cab'),
+    B(1.2,  4.85, 23.9, 25.07, 0,   6.6,  'cab'),
 
     // Dining
     B(4.2, 9.2, 3.2, 6.6, 2.1, 2.45, 'wood2'),

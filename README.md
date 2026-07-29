@@ -112,10 +112,29 @@ a soffit drops down to close the step. Miss one and you get a hole
 straight into the attic; the ray-casting check below is what catches
 them.
 
+## The closet block, and the pantry
+
+Two places in the plan are easy to read as one room and are not.
+
+The block between the hall and the garage looked like a single mud
+hall. It is actually **three closets around a solid core**, each
+opening a different way: linen faces north into the hall, coats faces
+west into the mud hall, and bedroom 4's reach-in faces east into the
+bedroom. The mud hall is only the strip west of them. Three wall lines
+carry that — x = 24.0, x = 26.45 and z = 43.6 — and all three were
+missing at first.
+
+The **pantry** was the same mistake: it is a small walk-in room off the
+kitchen with its own door at the north-east corner, not the run of
+cabinets it was first modelled as.
+
+`closet-check.png` is a zoom of the overlay across both areas, which is
+the quickest way to see that the walls and door swings line up.
+
 ## Deliberate simplifications
 
-- **Small closets are not framed out.** The linen and coat closets off
-  the mud hall, and the reach-ins, are drawn as open floor area.
+- **Closet interiors are mostly bare.** Only the walk-in and the pantry
+  have shelving. The reach-ins are left empty so you can step inside.
 - **The front elevation is plainer than the real one.** No gabled
   board-and-batten entry feature, and no lower roof over the garage.
 - **Fixtures are boxes.** The island, counters, vanities, tubs, washer
