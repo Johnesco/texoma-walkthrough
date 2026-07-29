@@ -21,6 +21,35 @@ const BUILD = (function () {
     drive:   0xbdbab4, street:  0x55555a, stone:   0xd8d5cb,
   };
 
+  /* --- UVs projected from world position -------------------------
+     Nothing here carries texture coordinates, so each triangle is
+     projected down its dominant axis: floors and ceilings take x/z,
+     walls take whichever of x/z they face plus height. Because the
+     projection is in world feet, a plank is the same width in every
+     room and adjacent surfaces line up without any seam bookkeeping. */
+  function planarUV(pos, feetPerRepeat) {
+    const uv = new Float32Array((pos.length / 3) * 2);
+    for (let i = 0; i < pos.length; i += 9) {
+      const ux = pos[i+3] - pos[i],   uy = pos[i+4] - pos[i+1], uz = pos[i+5] - pos[i+2];
+      const vx = pos[i+6] - pos[i],   vy = pos[i+7] - pos[i+1], vz = pos[i+8] - pos[i+2];
+      const nx = Math.abs(uy*vz - uz*vy),
+            ny = Math.abs(uz*vx - ux*vz),
+            nz = Math.abs(ux*vy - uy*vx);
+      let p, q;
+      // For up/down faces U runs along z, so floor planks run the long
+      // way down the house and roof courses run parallel to the eave.
+      if (ny >= nx && ny >= nz) { p = 2; q = 0; }   // faces up/down
+      else if (nx >= nz)        { p = 2; q = 1; }   // faces east/west
+      else                      { p = 0; q = 1; }   // faces north/south
+      for (let k = 0; k < 3; k++) {
+        const o = i + k * 3, t = (i / 3 + k) * 2;
+        uv[t]     = pos[o + p] / feetPerRepeat;
+        uv[t + 1] = pos[o + q] / feetPerRepeat;
+      }
+    }
+    return uv;
+  }
+
   /* --- quad collector: one BufferGeometry per material --------- */
   class Bag {
     constructor() { this.b = new Map(); }
@@ -46,6 +75,8 @@ const BUILD = (function () {
         if (!arr.length) continue;
         const g = new THREE.BufferGeometry();
         g.setAttribute('position', new THREE.Float32BufferAttribute(arr, 3));
+        const feet = typeof TEXTURES !== 'undefined' ? TEXTURES.UV_FEET[name] : 0;
+        if (feet) g.setAttribute('uv', new THREE.Float32BufferAttribute(planarUV(arr, feet), 2));
         g.computeVertexNormals();
         const mesh = new THREE.Mesh(g, materials[name]);
         mesh.name = name;
@@ -302,5 +333,24 @@ const BUILD = (function () {
     return { groups, materials, colliders: collisionRects() };
   }
 
-  return { buildHouse, COLORS };
+  /* Textures multiply the palette rather than replace it, so turning
+     them off restores the plain flat-shaded model exactly. */
+  function attachTextures(house, maxAnisotropy) {
+    if (typeof TEXTURES === 'undefined') return {};
+    const maps = TEXTURES.build(maxAnisotropy);
+    house.maps = maps;
+    return maps;
+  }
+
+  function setTextures(house, on) {
+    if (!house.maps) return;
+    for (const name in house.maps) {
+      const m = house.materials[name];
+      if (!m) continue;
+      m.map = on ? house.maps[name] : null;
+      m.needsUpdate = true;
+    }
+  }
+
+  return { buildHouse, attachTextures, setTextures, COLORS };
 })();

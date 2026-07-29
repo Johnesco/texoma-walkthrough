@@ -32,6 +32,9 @@
 
   /* --- the house ------------------------------------------------- */
   const house = BUILD.buildHouse();
+  BUILD.attachTextures(house, renderer.capabilities.getMaxAnisotropy());
+  let textured = true;
+  BUILD.setTextures(house, textured);
   const root = new THREE.Group();
   root.add(house.groups.shell, house.groups.ceiling, house.groups.roof,
            house.groups.gable, house.groups.furniture);
@@ -91,6 +94,13 @@
     e.currentTarget.classList.toggle('on', house.groups.furniture.visible);
   });
 
+  function setTextured(on) {
+    textured = on;
+    BUILD.setTextures(house, on);
+    el('toggleTextures').classList.toggle('on', on);
+  }
+  el('toggleTextures').addEventListener('click', () => setTextured(!textured));
+
   /* Room jump buttons */
   const jumpWrap = el('jumps');
   PLAN.spawns.forEach(s => {
@@ -106,6 +116,7 @@
 
   document.addEventListener('keydown', (e) => {
     if (e.code === 'KeyM') el('mapWrap').classList.toggle('hidden');
+    if (e.code === 'KeyT') setTextured(!textured);
     if (e.code === 'Digit1') setMode('walk');
     if (e.code === 'Digit2') setMode('dollhouse');
     if (e.code === 'Digit3') setMode('exterior');

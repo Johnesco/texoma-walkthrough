@@ -18,6 +18,7 @@ step, no package install and no network access required.
 | **Shift** | run |
 | **Esc** | release the cursor |
 | **1 / 2 / 3** | walk / dollhouse / exterior |
+| **T** | textures on / off |
 | **M** | hide the minimap |
 
 **Walk** is the first-person view, with collision against walls and
@@ -61,6 +62,7 @@ css/style.css     overlay chrome
 js/plan.js        the house in feet: walls, openings, rooms, fixtures
 js/build.js       turns plan.js into flat-shaded geometry
 js/controls.js    first-person walker + orbit rig
+js/textures.js    procedural surfaces, drawn to canvases at load
 js/main.js        scene, lighting, view modes, minimap
 vendor/           three.js r156
 source/           the floorplan everything was measured from
@@ -141,6 +143,42 @@ the quickest way to see that the walls and door swings line up.
   and dryer are placed where the plan shows them, but they are blocks,
   not modelled casework. Three of them (bath 2 vanity, bedroom 4 bed,
   closet shelving) were nudged off doorways they were sitting across.
+
+## Textures
+
+**Textures** in the toolbar (or `T`) switches between textured and the
+plain flat-shaded model. Both are the same geometry.
+
+The surfaces are **generated, not photographs**. Two reasons: a page
+opened straight off the filesystem cannot load local image files at all
+— CORS treats every local file as its own origin — and shipping the
+listing photos would mean redistributing someone else's photography.
+So `js/textures.js` draws each map to a canvas at load: staggered
+wide-plank flooring, tile with grout, lap siding, board-and-batten on
+the gable, shingle courses, quartz speckle, a shaker panel on the
+cabinet faces, and a barely-there mottle on the painted walls.
+
+What *does* come from the photos is the proportions, measured off them:
+
+| | sampled | used as |
+|---|---|---|
+| plank tone spread | luminance 134 – 176 | 0.90 – 1.05 |
+| plank seam | 74 vs 155 | 0.55 |
+| drywall mottle | 179 vs 193 | 0.96 – 1.00 |
+| tile grout | 97 vs 139 | 0.72 |
+
+Every map is a light/dark modulation around white, so it *multiplies*
+the existing palette instead of replacing it. That is why switching
+textures off lands back on exactly the original colours, and why the
+maps carry no colour of their own.
+
+The geometry has no texture coordinates, so `planarUV()` in `build.js`
+projects each triangle down its dominant axis, in world feet. Floors
+and ceilings take z/x — which is what makes planks run the long way
+down the house and roof courses run parallel to the eave — and walls
+take height plus whichever of x/z they face. Because the projection is
+in world space, a plank is the same width in every room and adjacent
+surfaces line up with no seam bookkeeping at all.
 
 ## Colours
 
