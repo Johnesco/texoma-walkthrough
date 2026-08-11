@@ -108,9 +108,17 @@ const PLAN = (function () {
       holes:[[37.8,40.4,'door'],[45.0,47.5,'door']] },
     // Laundry / bath 3 divider
     { axis:'x', at:31.16, a:25.6, b:35.3, t:T_INT, top:H_STD },
-    // Primary shower wall, toilet nib, garage water-heater alcove
-    { axis:'x', at:36.7, a:16.3, b:22.4, t:T_INT, top:H_STD },
-    { axis:'x', at:36.7, a:24.9, b:26.2, t:T_INT, top:H_STD },
+    /* The east strip of the primary bath is three rooms stacked front
+       to back, not one: the shower (glass front, door in the glass),
+       then a linen closet, then a water closet with its own door.
+       The two z-walls are what separate them; the x=36.7 pieces are
+       the linen closet's door jambs. */
+    { axis:'z', at:21.2, a:36.49, b:40, t:T_INT, top:H_STD },     // shower / linen
+    { axis:'x', at:36.7, a:21.0, b:22.4, t:T_INT, top:H_STD },    // linen north jamb
+    { axis:'x', at:36.7, a:24.9, b:26.2, t:T_INT, top:H_STD },    // linen south jamb
+    { axis:'z', at:26.1, a:30.95, b:40, t:T_INT, top:H_STD,
+      holes:[[32.05,34.43,'door']] },                             // water closet
+    // Garage water-heater alcove
     { axis:'x', at:36.7, a:48.8, b:51.7, t:T_INT, top:H_STD },
     // Hall east wall / closet / garage-foyer wall
     { axis:'x', at:18.98, a:20.78, b:37.0, t:T_INT, top:H_STD },
@@ -139,12 +147,13 @@ const PLAN = (function () {
     { axis:'x', at:13.45, a:20.78, b:22.7, t:T_INT, y0:H_STD, top:H_VAULT_TOP },
     // Kitchen / flex divider
     { axis:'z', at:25.07, a:0, b:13.7, t:T_INT, top:H_VAULT_TOP },
-    // Pantry: a small walk-in off the kitchen, entered at its north-east
-    // corner — not the run of cabinets it was first modelled as.
-    { axis:'z', at:20.3, a:0, b:4.85, t:T_INT, top:H_VAULT_TOP,
-      holes:[[2.8,4.85,'door']] },
+    // Pantry: a small walk-in off the kitchen. One door, in the east
+    // wall at its north end — the north wall is solid. The drawing's
+    // door is a hair narrower; it is widened to 2'-2" so the walker
+    // (radius 0.85') fits through, same as the nudged fixtures.
+    { axis:'z', at:20.3, a:0, b:4.85, t:T_INT, top:H_VAULT_TOP },
     { axis:'x', at:4.85, a:20.3, b:25.07, t:T_INT, top:H_VAULT_TOP,
-      holes:[[20.3,22.1,'door']] },
+      holes:[[20.55,22.75,'door']] },
     // Closet / laundry+bath 3 divider
     { axis:'z', at:29.64, a:18.8, b:40, t:T_INT, top:H_STD },
     // Bath 3 south wall + door into bedroom 4
@@ -194,6 +203,11 @@ const PLAN = (function () {
     { id:'family',  name:'Family Room',  x0:13.45, x1:25.2,  z0:0,     z1:20.78, floor:'wood',     ceil:'vault' },
     { id:'pentry',  name:'Primary Entry',x0:25.2,  x1:28.95, z0:16.1,  z1:20.78, floor:'wood',     ceil:H_STD },
     { id:'primary', name:'Primary Suite',x0:25.2,  x1:40,    z0:0,     z1:15.93, floor:'wood',     ceil:H_STD },
+    // the three small rooms come before pbath: they overlap it, and
+    // first match wins
+    { id:'shower',  name:'Shower',       x0:36.7,  x1:40,    z0:15.93, z1:21.2,  floor:'tile',     ceil:H_STD },
+    { id:'plinen',  name:'Linen Closet', x0:36.7,  x1:40,    z0:21.2,  z1:26.1,  floor:'tile',     ceil:H_STD },
+    { id:'wc',      name:'Water Closet', x0:31.16, x1:40,    z0:26.1,  z1:29.64, floor:'tile',     ceil:H_STD },
     { id:'pbath',   name:'Primary Bath', x0:28.95, x1:40,    z0:15.93, z1:29.64, floor:'tile',     ceil:H_STD },
     { id:'wic',     name:'Walk-In Closet',x0:18.98,x1:31.16, z0:20.78, z1:29.64, floor:'wood',     ceil:H_STD },
     { id:'flex',    name:'Flex Room',    x0:0,     x1:13.45, z0:25.07, z1:36.84, floor:'wood',     ceil:H_STD },
@@ -246,12 +260,14 @@ const PLAN = (function () {
     // Primary suite — bed + nightstands
     B(30.0, 36.6, 0.4, 7.2, 0, 2.1, 'bed'),
     B(29.0, 30.0, 0.4, 2.0, 0, 1.9, 'wood2'), B(36.6, 37.6, 0.4, 2.0, 0, 1.9, 'wood2'),
-    // Primary bath — double vanity, shower base + glass
+    // Primary bath — double vanity, then the shower: pan up to the
+    // linen divider, glass front with the entry gap at z 17.6–19.7
+    // where the plan draws the pivot door.
     B(28.95, 31.16, 16.2, 20.8, 0, 2.9, 'cab'),
     B(28.95, 31.36, 16.2, 20.8, 2.9, 3.05, 'counter'),
-    B(36.7, 40, 15.93, 20.1, 0, 0.35, 'tile2'),
-    B(36.68, 36.82, 15.93, 20.1, 0.35, 7.0, 'glass'),
-    B(36.7, 40, 20.0, 20.14, 0.35, 7.0, 'glass'),
+    B(36.7, 40, 16.14, 20.99, 0, 0.35, 'tile2'),
+    B(36.68, 36.82, 16.14, 17.6, 0.35, 7.0, 'glass'),
+    B(36.68, 36.82, 19.7, 20.99, 0.35, 7.0, 'glass'),
 
     // Walk-in closet — shelving. The east run stops short of z 26 so
     // it does not sit across the opening from the primary bath.
@@ -298,7 +314,7 @@ const PLAN = (function () {
     { id:'dining',  name:'Dining',        x:6.5,  z:9.5,  look:E },
     { id:'flex',    name:'Flex Room',     x:6.5,  z:31.0, look:E },
     { id:'primary', name:'Primary Suite', x:32.0, z:12.0, look:N },
-    { id:'pbath',   name:'Primary Bath',  x:34.5, z:26.5, look:N },
+    { id:'pbath',   name:'Primary Bath',  x:34.5, z:23.2, look:N },
     { id:'wic',     name:'Walk-In Closet',x:25.0, z:25.2, look:E },
     { id:'bed2',    name:'Bedroom 2',     x:6.7,  z:46.0, look:N },
     { id:'bed3',    name:'Bedroom 3',     x:6.7,  z:61.5, look:S },

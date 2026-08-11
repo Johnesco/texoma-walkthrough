@@ -114,9 +114,9 @@ a soffit drops down to close the step. Miss one and you get a hole
 straight into the attic; the ray-casting check below is what catches
 them.
 
-## The closet block, and the pantry
+## The closet block, the pantry, and the primary bath
 
-Two places in the plan are easy to read as one room and are not.
+Three places in the plan are easy to read as one room and are not.
 
 The block between the hall and the garage looked like a single mud
 hall. It is actually **three closets around a solid core**, each
@@ -128,10 +128,20 @@ missing at first.
 
 The **pantry** was the same mistake: it is a small walk-in room off the
 kitchen with its own door at the north-east corner, not the run of
-cabinets it was first modelled as.
+cabinets it was first modelled as. One door — the drawing's north wall
+is solid; an earlier version had a second, phantom doorway there.
 
-`closet-check.png` is a zoom of the overlay across both areas, which is
-the quickest way to see that the walls and door swings line up.
+The **east strip of the primary bath** was the worst case: it is three
+rooms stacked front to back — the shower, then a linen closet, then a
+water closet with its own door — and the first model had it as one open
+alcove, with a solid wall across the shower where the glass front
+belongs. The two cross walls (z = 21.2 and z = 26.1) and the water
+closet's door are what carve it up; the shower front is glass with an
+entry gap where the plan draws the pivot door.
+
+`closet-check.png` is a zoom of the overlay across the closet block and
+the pantry, which is the quickest way to see that the walls and door
+swings line up.
 
 ## Deliberate simplifications
 
@@ -143,6 +153,9 @@ the quickest way to see that the walls and door swings line up.
   and dryer are placed where the plan shows them, but they are blocks,
   not modelled casework. Three of them (bath 2 vanity, bedroom 4 bed,
   closet shelving) were nudged off doorways they were sitting across.
+- **The pantry door is 2'-2" wide**, a few inches wider than drawn, so
+  the walker (radius 0.85') fits through. Same spirit as the nudged
+  fixtures: the drawing wins on position, walkability wins on width.
 
 ## Textures
 
